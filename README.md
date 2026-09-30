@@ -40,6 +40,8 @@ The following GPOs are linked and enabled at the `hohops.com` domain level:
 *   Command prompt
 *   Deny all removable storage access
 
+![Active Directory OUs and Groups](docs/OU_ScreenShot.png)
+
 ## 5. Troubleshooting & Lessons Learned
 
 **Issue:** Unable to join the Windows 11 client VM (`Win11-PC1`) to the domain. Upon inspection of the DNS Manager on the server, the standard Active Directory folders (`_msdcs`, `_sites`, `_tcp`, and `_udp`) were missing from the Forward Lookup Zones.

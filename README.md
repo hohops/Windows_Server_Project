@@ -42,7 +42,14 @@ The following GPOs are linked and enabled at the `hohops.com` domain level to en
 * Disable Command Prompt
 * Deny All Removable Storage Access
 
-![Group Policy Settings Expanded](images/GPO_ScreenShot.png)
+![Group Policy Settings Expanded](docs/GPO_ScreenShot.png)
+
+## 6. PowerShell Automation
+To simulate an enterprise onboarding environment, user provisioning was automated using PowerShell. 
+* The script reads employee data from a CSV file.
+* It dynamically assigns users to the correct department OU based on their job title.
+* It provisions a standardized default password and enforces a password change at next logon for security compliance.
+* **View the script here:** [Bulk-UserCreation.ps1](scripts/Bulk-UserCreation.ps1)
 
 ## 5. Troubleshooting & Lessons Learned
 

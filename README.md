@@ -41,6 +41,7 @@ The following GPOs are linked and enabled at the `hohops.com` domain level to en
 * Restrict Control Panel Access
 * Disable Command Prompt
 * Deny All Removable Storage Access
+(Added one bypass group for each GPO)
 
 ![Group Policy Settings Expanded](docs/GPO_ScreenShot.png)
 
@@ -57,3 +58,13 @@ To simulate an enterprise onboarding environment, user provisioning was automate
 **Issue:** Unable to join the Windows 11 client VM (`Win11-PC1`) to the domain. Upon inspection of the DNS Manager on the server, the standard Active Directory folders (`_msdcs`, `_sites`, `_tcp`, and `_udp`) were missing from the Forward Lookup Zones.
 
 **Resolution:** The DNS zone was not properly integrated with Active Directory. To resolve this, the domain zone properties were modified to enable **"Store the zone in Active Directory"**. This regenerated the missing SRV records and allowed the client VM to successfully discover the Domain Controller (`EDU-DC1`) and join the domain.
+
+**Scenario:** An executive required emergency access to a flash drive, but the domain-wide `Deny all removable storage access` policy was enforced. Disabling the policy would compromise the entire domain's security.
+
+**Solution:** 
+* Created a dedicated Security Group named `SG_Bypass_RemovableStorage` and added the executive's account.
+* Configured **Security Filtering** on the GPO's delegation settings.
+* Applied an explicit **Deny** permission for **Apply group policy** to the bypass group. 
+* *Result:* The executive successfully bypassed the restriction while the rest of the domain remained securely locked down, demonstrating the principle of least privilege and exception management.
+
+![Group Policy Settings Expanded](docs/E.G.P.O.png)

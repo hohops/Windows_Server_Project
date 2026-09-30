@@ -42,7 +42,7 @@ The following GPOs are linked and enabled at the `hohops.com` domain level to en
 * Disable Command Prompt
 * Deny All Removable Storage Access
 
-![Group Policy Settings Expanded](images/GPO_ScreenShot.png)
+![Group Policy Settings Expanded](docs/GPO_ScreenShot.png)
 
 ## 5. Troubleshooting & Lessons Learned
 

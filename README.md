@@ -43,6 +43,7 @@ The following GPOs are linked and enabled at the `hohops.com` domain level to en
 * Deny All Removable Storage Access
 
 ![Group Policy Settings Expanded](docs/GPO_ScreenShot.png)
+<<<<<<< HEAD
 
 ## 6. PowerShell Automation
 To simulate an enterprise onboarding environment, user provisioning was automated using PowerShell. 
@@ -50,6 +51,8 @@ To simulate an enterprise onboarding environment, user provisioning was automate
 * It dynamically assigns users to the correct department OU based on their job title.
 * It provisions a standardized default password and enforces a password change at next logon for security compliance.
 * **View the script here:** [Bulk-UserCreation.ps1](scripts/Bulk-UserCreation.ps1)
+=======
+>>>>>>> b899a76a2016d29c319bc72bea56b5668cb7b9df
 
 ## 5. Troubleshooting & Lessons Learned
 

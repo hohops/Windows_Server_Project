@@ -49,7 +49,7 @@ To simulate an enterprise onboarding environment, user provisioning was automate
 * The script reads employee data from a CSV file.
 * It dynamically assigns users to the correct department OU based on their job title.
 * It provisions a standardized default password and enforces a password change at next logon for security compliance.
-* **View the script here:** [Bulk-UserCreation.ps1](scripts/Bulk-UserCreation.ps1)
+* **View the script here:** [Bulk-UserCreation.ps1](Scripts/Bulk-UserCreation.ps1)
 
 
 ## 5. Troubleshooting & Lessons Learned

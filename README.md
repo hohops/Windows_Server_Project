@@ -112,135 +112,44 @@ Manual account creation is replaced with a modular PowerShell onboarding script 
 ### `Bulk-UserCreation.ps1`
 
 ```powershell
-<#
-.SYNOPSIS
-    Automated Active Directory bulk user provisioning utility.
-.DESCRIPTION
-    Ingests an employee CSV file, validates schema, generates randomized
-    temporary credentials, assigns departmental OUs/groups, and outputs structured logs.
-.NOTES
-    Author: Cruz / hohops
-    Domain: hohops.com
-#>
+﻿
+Import-Module ActiveDirectory
 
-[CmdletBinding()]
-param (
-    [Parameter(Mandatory = $false)]
-    [ValidateScript({ Test-Path $_ })]
-    [string]$CsvPath = ".\employees.csv",
 
-    [Parameter(Mandatory = $false)]
-    [string]$LogPath = "C:\Logs\AD_Provisioning.log"
-)
-
-# Ensure logging directory exists
-$logDir = Split-Path -Path $LogPath
-if (-not (Test-Path $logDir)) {
-    New-Item -ItemType Directory -Path $logDir -Force | Out-Null
-}
-
-function Write-Log {
-    param (
-        [string]$Message,
-        [ValidateSet("INFO", "WARN", "ERROR")][string]$Severity = "INFO"
-    )
-    $timestamp = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-    $logEntry = "[$timestamp] [$Severity] $Message"
-    Add-Content -Path $LogPath -Value $logEntry
-    Write-Host $logEntry -ForegroundColor $(
-        switch ($Severity) {
-            "INFO"  { "Cyan" }
-            "WARN"  { "Yellow" }
-            "ERROR" { "Red" }
-        }
-    )
-}
-
-function Get-SecureTempPassword {
-    $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
-    $length = 16
-    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-    $bytes = New-Object byte[] $length
-    $rng.GetBytes($bytes)
-    $password = -join ($bytes | ForEach-Object { $chars[$_ % $chars.Length] })
-    return (ConvertTo-SecureString -String $password -AsPlainText -Force)
-}
-
-Write-Log "Starting automated user provisioning from: $CsvPath"
-
-try {
-    $employees = Import-Csv -Path $CsvPath -ErrorAction Stop
-}
-catch {
-    Write-Log "Failed to parse CSV file: $($_.Exception.Message)" -Severity "ERROR"
-    exit 1
-}
-
+$csvPath = "Documents\Users.csv"
 $domain = "hohops.com"
-$baseOU = "DC=hohops,DC=com"
+$defaultPassword = ConvertTo-SecureString "Welcome123!" -AsPlainText -Force
 
-foreach ($user in $employees) {
+
+$users = Import-Csv -Path $csvPath
+
+foreach ($user in $users) {
+    $givenName = $user.FirstName
+    $surname = $user.LastName
+    $department = $user.Department
+    $samAccountName = $user.Username
+    $upn = "$samAccountName@$domain"
+    
+
+    $ouPath = "OU=$department,OU=Company,DC=hohops,DC=com"
+
     try {
-        # Validate critical fields
-        if ([string]::IsNullOrWhiteSpace($user.FirstName) -or 
-            [string]::IsNullOrWhiteSpace($user.LastName) -or 
-            [string]::IsNullOrWhiteSpace($user.Department)) {
-            Write-Log "Skipping invalid row: Missing mandatory fields for record: $($user | Out-String)" -Severity "WARN"
-            continue
-        }
-
-        $sAMAccountName = "$($user.FirstName.ToLower().Substring(0,1))$($user.LastName.ToLower())"
-        $userPrincipalName = "$sAMAccountName@$domain"
-        $displayName = "$($user.FirstName) $($user.LastName)"
-        $targetOU = "OU=$($user.Department),OU=Departments,OU=Corporate,$baseOU"
-
-        # Check if target OU exists
-        if (-not [adsi]::Exists("LDAP://$targetOU")) {
-            Write-Log "Target OU not found: $targetOU. Creating OU..." -Severity "WARN"
-            New-ADOrganizationalUnit -Name $user.Department -Path "OU=Departments,OU=Corporate,$baseOU"
-        }
-
-        # Check if identity already exists
-        if (Get-ADUser -Filter "sAMAccountName -eq '$sAMAccountName'" -ErrorAction SilentlyContinue) {
-            Write-Log "Skipping duplicate user: $sAMAccountName already exists." -Severity "WARN"
-            continue
-        }
-
-        $securePassword = Get-SecureTempPassword
-
-        # Account creation
-        $newAdUserParams = @{
-            SamAccountName        = $sAMAccountName
-            UserPrincipalName     = $userPrincipalName
-            Name                  = $displayName
-            GivenName             = $user.FirstName
-            Surname               = $user.LastName
-            DisplayName           = $displayName
-            Department            = $user.Department
-            Title                 = $user.Title
-            Path                  = $targetOU
-            AccountPassword       = $securePassword
-            Enabled               = $true
-            ChangePasswordAtLogon = $true
-            CannotChangePassword  = $false
-        }
-
-        New-ADUser @newAdUserParams -ErrorAction Stop
-        Write-Log "Successfully provisioned user account: $userPrincipalName in $targetOU"
-
-        # Departmental group assignment
-        $deptGroup = "GG_$($user.Department)_Users"
-        if (Get-ADGroup -Filter "Name -eq '$deptGroup'" -ErrorAction SilentlyContinue) {
-            Add-ADGroupMember -Identity $deptGroup -Members $sAMAccountName -ErrorAction Stop
-            Write-Log "Assigned $sAMAccountName to security group $deptGroup"
-        }
-    }
-    catch {
-        Write-Log "Failed to provision user $($user.FirstName) $($user.LastName): $($_.Exception.Message)" -Severity "ERROR"
+        New-ADUser -SamAccountName $samAccountName `
+                   -UserPrincipalName $upn `
+                   -Name "$givenName $surname" `
+                   -GivenName $givenName `
+                   -Surname $surname `
+                   -Department $department `
+                   -Path $ouPath `
+                   -AccountPassword $defaultPassword `
+                   -ChangePasswordAtLogon $true `
+                   -Enabled $true
+                   
+        Write-Host "Successfully created user: $samAccountName in$department OU" -ForegroundColor Green
+    } catch {
+        Write-Host "Failed to create user: $samAccountName. Error: $_" -ForegroundColor Red
     }
 }
-
-Write-Log "User provisioning lifecycle completed."
 ```
 
 ### Sample CSV Input (`employees.csv`)
